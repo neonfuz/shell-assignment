@@ -55,6 +55,8 @@ int main(int argc, char **argv)
             if (args_len >= 2 && strcmp(">", args[args_len-2]) == 0 ) {
                 close(fd);
                 fd = open(args[args_len-1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                args[args_len-2] = NULL;
+                args_len -= 2;
             }
 
             if(args_len > 0)
