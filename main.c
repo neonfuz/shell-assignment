@@ -1,11 +1,35 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <string.h>
 
 static inline
 int is_whitespace(char c)
 {
     return c == ' ' || c == '\n' || c == '\r';
+}
+
+int parse_line(char *line, char *args[])
+{
+    int args_len = 0;
+    for (int line_i = 0, in_arg = 0; line[line_i] != '\0'; ++line_i) {
+        if (!in_arg) {
+            if (!is_whitespace(line[line_i])) {
+                args[args_len++] = &line[line_i];
+                in_arg = 1;
+            }
+        } else {
+            if (is_whitespace(line[line_i])) {
+                line[line_i] = '\0';
+                in_arg = 0;
+            }
+        }
+    }
+    args[args_len] = NULL;
+
+    return args_len;
 }
 
 int main(int argc, char **argv)
@@ -18,25 +42,24 @@ int main(int argc, char **argv)
         fputs("$ ", stdout);
         fgets(line, 256, stdin);
 
-        int args_len = 0, in_arg = 0;
-        for (int line_i = 0; line[line_i] != '\0'; ++line_i) {
-            if (!in_arg) {
-                if (!is_whitespace(line[line_i])) {
-                    args[args_len++] = &line[line_i];
-                    in_arg = 1;
-                }
-            } else {
-                if (is_whitespace(line[line_i])) {
-                    line[line_i] = '\0';
-                    in_arg = 0;
-                }
-            }
-        }
-        args[args_len] = NULL;
+        int args_len = parse_line(line, args);
 
-        for(int i=0; i<args_len; ++i)
-            if (strcmp("quit", args[i]) == 0)
-                loop = 0;
+        if (args_len >= 3 && strcmp(">", args[args_len-2]) == 0 )
+            puts("Pipes not yet implemented...");
+
+        if (args_len > 0 && strcmp("exit", args[0]) == 0) {
+            loop = 0;
+            continue;
+        }
+
+        pid_t childPid = fork();
+
+        if(childPid == 0) {
+            execvp(args[0], args);
+            loop = 0;
+        } else {
+            waitpid(childPid, NULL, 0);
+        }
     }
 
     return 0;
