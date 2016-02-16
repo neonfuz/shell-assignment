@@ -52,12 +52,14 @@ int main(int argc, char **argv)
         if(childPid == 0) {
             int fd = STDOUT_FILENO;
 
-            if (args_len >= 3 && strcmp(">", args[args_len-2]) == 0 ) {
+            if (args_len >= 2 && strcmp(">", args[args_len-2]) == 0 ) {
                 close(fd);
                 fd = open(args[args_len-1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
             }
 
-            execvp(args[0], args);
+            if(args_len > 0)
+                execvp(args[0], args);
+
             break;
         } else {
             waitpid(childPid, NULL, 0);
