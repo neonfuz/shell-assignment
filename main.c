@@ -37,8 +37,7 @@ int main(int argc, char **argv)
     char line[256];
     char *args[256];
 
-    int loop = 1;
-    while (loop) {
+    while (1) {
         fputs("$ ", stdout);
         fgets(line, 256, stdin);
 
@@ -48,15 +47,14 @@ int main(int argc, char **argv)
             puts("Pipes not yet implemented...");
 
         if (args_len > 0 && strcmp("exit", args[0]) == 0) {
-            loop = 0;
-            continue;
+            break;
         }
 
         pid_t childPid = fork();
 
         if(childPid == 0) {
             execvp(args[0], args);
-            loop = 0;
+            break;
         } else {
             waitpid(childPid, NULL, 0);
         }
